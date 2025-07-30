@@ -10,13 +10,21 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+type Auth interface {
+	Register(ctx context.Context, email string, password string) (int64, error)
+	Login(ctx context.Context, email string, password string, appID int64) (string, error)
+	IsAdmin(ctx context.Context, userID int64) (bool, error)
+}
+
 type serverAPI struct {
 	sso.UnimplementedAuthServer
+	auth     Auth
 	validate *validator.Validate
 }
 
-func Register(gRPC *grpc.Server) {
+func Register(gRPC *grpc.Server, auth Auth) {
 	sso.RegisterAuthServer(gRPC, &serverAPI{
+		auth:     auth,
 		validate: validator.New(),
 	})
 }
@@ -40,13 +48,25 @@ func (s *serverAPI) Register(ctx context.Context, req *sso.RegisterRequest) (*ss
 		)
 	}
 
-	return &sso.RegisterResponse{}, nil // TODO: Implement login logic
+	userID, err := s.auth.Register(ctx, input.Email, input.Password)
+	if err != nil {
+		// todo: handle specific error cases
+		return nil, status.Errorf(
+			codes.Internal,
+			"failed to register user: %v",
+			err.Error(),
+		)
+	}
+
+	return &sso.RegisterResponse{
+		UserId: userID,
+	}, nil
 }
 
 type loginInput struct {
 	Email    string `validate:"required,email"`
 	Password string `validate:"required,min=8"`
-	AppId    int32  `validate:"required"`
+	AppId    int64  `validate:"required"`
 }
 
 func (s *serverAPI) Login(ctx context.Context, req *sso.LoginRequest) (*sso.LoginResponse, error) {
@@ -64,7 +84,19 @@ func (s *serverAPI) Login(ctx context.Context, req *sso.LoginRequest) (*sso.Logi
 		)
 	}
 
-	return &sso.LoginResponse{}, nil // TODO: Implement login logic
+	token, err := s.auth.Login(ctx, input.Email, input.Password, input.AppId)
+	if err != nil {
+		// todo: handle specific error cases
+		return nil, status.Errorf(
+			codes.Internal,
+			"failed to login user: %v",
+			err.Error(),
+		)
+	}
+
+	return &sso.LoginResponse{
+		Token: token,
+	}, nil
 }
 
 type isAdminInput struct {
@@ -84,5 +116,17 @@ func (s *serverAPI) IsAsmin(ctx context.Context, req *sso.IsAdminRequest) (*sso.
 		)
 	}
 
-	return &sso.IsAdminResponse{IsAdmin: true}, nil // TODO: Implement admin check logic
+	isAdmin, err := s.auth.IsAdmin(ctx, input.UserId)
+	if err != nil {
+		// todo: handle specific error cases
+		return nil, status.Errorf(
+			codes.Internal,
+			"failed to check admin status: %v",
+			err.Error(),
+		)
+	}
+
+	return &sso.IsAdminResponse{
+		IsAdmin: isAdmin,
+	}, nil
 }
