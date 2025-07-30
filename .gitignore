@@ -35,3 +35,6 @@ config/prod.yaml
 
 # Database files
 storage/*.db
+
+# Temporary files
+tmp/

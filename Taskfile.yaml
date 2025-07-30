@@ -1,0 +1,8 @@
+version: '3'
+
+tasks:
+  air:
+    aliases: ['a']
+    desc: Start the Air live reloading tool
+    cmds:
+      - air
