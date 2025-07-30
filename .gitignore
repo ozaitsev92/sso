@@ -30,8 +30,8 @@ go.work
 .DS_Store
 Thumbs.db
 
-# Local configuration files
-config/local.yaml
+# Configuration files
+config/prod.yaml
 
 # Database files
 storage/*.db

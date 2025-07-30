@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/ozaitsev92/sso/internal/app"
 	"github.com/ozaitsev92/sso/internal/config"
 )
 
@@ -24,9 +25,9 @@ func main() {
 		slog.Int("grpc_port", cfg.GRPC.Port),
 	)
 
-	// todo: init app
+	application := app.New(log, cfg.GRPC.Port, cfg.StoragePath, cfg.TokenTTL)
 
-	// todo: start grpc server
+	application.GRPCSrv.MustRun()
 }
 
 func setupLogger(env string) *slog.Logger {
