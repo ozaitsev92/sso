@@ -7,7 +7,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/ozaitsev92/sso/internal/services/auth"
 	"github.com/ozaitsev92/sso/internal/storage"
-	"github.com/ozaitsev92/ssoprotos/gen/go/sso"
+	ssov1 "github.com/ozaitsev92/ssoprotos/gen/go/sso"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -16,17 +16,16 @@ import (
 type Auth interface {
 	Register(ctx context.Context, email string, password string) (int64, error)
 	Login(ctx context.Context, email string, password string, appID int64) (string, error)
-	IsAdmin(ctx context.Context, userID int64) (bool, error)
 }
 
 type serverAPI struct {
-	sso.UnimplementedAuthServer
+	ssov1.UnimplementedAuthServer
 	auth     Auth
 	validate *validator.Validate
 }
 
 func Register(gRPC *grpc.Server, auth Auth) {
-	sso.RegisterAuthServer(gRPC, &serverAPI{
+	ssov1.RegisterAuthServer(gRPC, &serverAPI{
 		auth:     auth,
 		validate: validator.New(),
 	})
@@ -37,7 +36,7 @@ type registerInput struct {
 	Password string `validate:"required,min=8"`
 }
 
-func (s *serverAPI) Register(ctx context.Context, req *sso.RegisterRequest) (*sso.RegisterResponse, error) {
+func (s *serverAPI) Register(ctx context.Context, req *ssov1.RegisterRequest) (*ssov1.RegisterResponse, error) {
 	input := registerInput{
 		Email:    req.GetEmail(),
 		Password: req.GetPassword(),
@@ -68,7 +67,7 @@ func (s *serverAPI) Register(ctx context.Context, req *sso.RegisterRequest) (*ss
 		)
 	}
 
-	return &sso.RegisterResponse{
+	return &ssov1.RegisterResponse{
 		UserId: userID,
 	}, nil
 }
@@ -79,7 +78,7 @@ type loginInput struct {
 	AppId    int64  `validate:"required"`
 }
 
-func (s *serverAPI) Login(ctx context.Context, req *sso.LoginRequest) (*sso.LoginResponse, error) {
+func (s *serverAPI) Login(ctx context.Context, req *ssov1.LoginRequest) (*ssov1.LoginResponse, error) {
 	input := loginInput{
 		Email:    req.GetEmail(),
 		Password: req.GetPassword(),
@@ -111,46 +110,7 @@ func (s *serverAPI) Login(ctx context.Context, req *sso.LoginRequest) (*sso.Logi
 		)
 	}
 
-	return &sso.LoginResponse{
+	return &ssov1.LoginResponse{
 		Token: token,
-	}, nil
-}
-
-type isAdminInput struct {
-	UserId int64 `validate:"required"`
-}
-
-func (s *serverAPI) IsAsmin(ctx context.Context, req *sso.IsAdminRequest) (*sso.IsAdminResponse, error) {
-	input := isAdminInput{
-		UserId: req.GetUserId(),
-	}
-
-	if err := s.validate.Struct(input); err != nil {
-		return nil, status.Errorf(
-			codes.InvalidArgument,
-			"validation failed: %v",
-			err.Error(),
-		)
-	}
-
-	isAdmin, err := s.auth.IsAdmin(ctx, input.UserId)
-	if err != nil {
-		if errors.Is(err, storage.ErrUserNotFound) {
-			return nil, status.Errorf(
-				codes.NotFound,
-				"user not found: %v",
-				err.Error(),
-			)
-		}
-
-		return nil, status.Errorf(
-			codes.Internal,
-			"failed to check admin status: %v",
-			err.Error(),
-		)
-	}
-
-	return &sso.IsAdminResponse{
-		IsAdmin: isAdmin,
 	}, nil
 }

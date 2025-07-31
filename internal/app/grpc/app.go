@@ -20,7 +20,6 @@ type App struct {
 type Auth interface {
 	Register(ctx context.Context, email string, password string) (int64, error)
 	Login(ctx context.Context, email string, password string, appID int64) (string, error)
-	IsAdmin(ctx context.Context, userID int64) (bool, error)
 }
 
 func New(logger *slog.Logger, authService Auth, port int, timeout time.Duration) *App {
