@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/ozaitsev92/sso/internal/domain/models"
-	"github.com/ozaitsev92/sso/internal/lob/jwt"
+	"github.com/ozaitsev92/sso/internal/lib/jwt"
 	"github.com/ozaitsev92/sso/internal/storage"
 	"golang.org/x/crypto/bcrypt"
 )
