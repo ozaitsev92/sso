@@ -6,6 +6,7 @@ tasks:
     desc: Run database migrations
     cmds:
       - go run ./cmd/migrator --storage-path=./storage/sso.db --migrations-path=./migrations
+
   test-functional:
     aliases: ['tf']
     desc: Run functional tests
@@ -13,3 +14,17 @@ tasks:
       - migrate
     cmds:
       - go test -v ./tests/functional/...
+
+  run:
+    aliases: ['r']
+    desc: Start the SSO container and run migrations
+    cmds:
+      - docker-compose up -d --build
+      - sleep 2
+      - docker-compose exec sso /app/migrator --storage-path=./storage/sso.db --migrations-path=./migrations
+
+  stop:
+    aliases: ['s']
+    desc: Stop the SSO container
+    cmds:
+      - docker-compose down

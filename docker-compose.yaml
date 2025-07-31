@@ -1,0 +1,15 @@
+version: '3.1'
+
+services:
+  sso:
+    build:
+      context: .
+    restart: on-failure
+    ports:
+      - "50051:50051"
+    environment:
+      CONFIG_PATH: /app/config/local.yaml
+    volumes:
+      - ./storage:/app/storage
+      - ./config/local.yaml:/app/config/local.yaml:ro
+      - ./migrations:/app/migrations:ro
