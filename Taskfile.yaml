@@ -1,13 +1,15 @@
 version: '3'
 
 tasks:
-  air:
-    aliases: ['a']
-    desc: Start the Air live reloading tool
-    cmds:
-      - air
   migrate:
     aliases: ['m']
     desc: Run database migrations
     cmds:
       - go run ./cmd/migrator --storage-path=./storage/sso.db --migrations-path=./migrations
+  test-functional:
+    aliases: ['tf']
+    desc: Run functional tests
+    deps:
+      - migrate
+    cmds:
+      - go test -v ./tests/functional/...
