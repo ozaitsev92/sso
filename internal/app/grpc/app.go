@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"time"
 
 	authgrpc "github.com/ozaitsev92/sso/internal/grpc/auth"
 	"google.golang.org/grpc"
@@ -22,8 +23,10 @@ type Auth interface {
 	IsAdmin(ctx context.Context, userID int64) (bool, error)
 }
 
-func New(logger *slog.Logger, authService Auth, port int) *App {
-	gRPCServer := grpc.NewServer()
+func New(logger *slog.Logger, authService Auth, port int, timeout time.Duration) *App {
+	gRPCServer := grpc.NewServer(
+		grpc.UnaryInterceptor(timeoutInterceptor(timeout)),
+	)
 
 	authgrpc.Register(gRPCServer, authService)
 
