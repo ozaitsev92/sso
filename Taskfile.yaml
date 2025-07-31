@@ -6,3 +6,8 @@ tasks:
     desc: Start the Air live reloading tool
     cmds:
       - air
+  migrate:
+    aliases: ['m']
+    desc: Run database migrations
+    cmds:
+      - go run ./cmd/migrator --storage-path=./storage/sso.db --migrations-path=./migrations

@@ -2,8 +2,11 @@ package auth
 
 import (
 	"context"
+	"errors"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/ozaitsev92/sso/internal/services/auth"
+	"github.com/ozaitsev92/sso/internal/storage"
 	"github.com/ozaitsev92/ssoprotos/gen/go/sso"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -50,7 +53,14 @@ func (s *serverAPI) Register(ctx context.Context, req *sso.RegisterRequest) (*ss
 
 	userID, err := s.auth.Register(ctx, input.Email, input.Password)
 	if err != nil {
-		// todo: handle specific error cases
+		if errors.Is(err, storage.ErrUserExists) {
+			return nil, status.Errorf(
+				codes.AlreadyExists,
+				"user already exists: %v",
+				err.Error(),
+			)
+		}
+
 		return nil, status.Errorf(
 			codes.Internal,
 			"failed to register user: %v",
@@ -86,7 +96,14 @@ func (s *serverAPI) Login(ctx context.Context, req *sso.LoginRequest) (*sso.Logi
 
 	token, err := s.auth.Login(ctx, input.Email, input.Password, input.AppId)
 	if err != nil {
-		// todo: handle specific error cases
+		if errors.Is(err, auth.ErrInvalidCredentials) {
+			return nil, status.Errorf(
+				codes.InvalidArgument,
+				"invalid credentials: %v",
+				err.Error(),
+			)
+		}
+
 		return nil, status.Errorf(
 			codes.Internal,
 			"failed to login user: %v",
@@ -118,7 +135,14 @@ func (s *serverAPI) IsAsmin(ctx context.Context, req *sso.IsAdminRequest) (*sso.
 
 	isAdmin, err := s.auth.IsAdmin(ctx, input.UserId)
 	if err != nil {
-		// todo: handle specific error cases
+		if errors.Is(err, storage.ErrUserNotFound) {
+			return nil, status.Errorf(
+				codes.NotFound,
+				"user not found: %v",
+				err.Error(),
+			)
+		}
+
 		return nil, status.Errorf(
 			codes.Internal,
 			"failed to check admin status: %v",
