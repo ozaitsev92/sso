@@ -1,4 +1,3 @@
-![Go Report](https://goreportcard.com/badge/github.com/ozaitsev92/sso)
 ![Repository Top Language](https://img.shields.io/github/languages/top/ozaitsev92/sso)
 ![Github Repository Size](https://img.shields.io/github/repo-size/ozaitsev92/sso)
 ![Github Open Issues](https://img.shields.io/github/issues/ozaitsev92/sso)
